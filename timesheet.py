@@ -1,4 +1,5 @@
 import requests
+from calendar import monthcalendar
 from datetime import datetime
 
 URLS = {
@@ -76,12 +77,14 @@ timesheet = Timesheet('Name.Surname', 'password')
 year=datetime.now().year
 month=datetime.now().month
 
+business_days = [day for week in monthcalendar(year, month) for day in week[:5] if day != 0]
+
 # absence
 absence_days = []
 map(lambda day: timesheet.log_task(TASKS['absence'], datetime(year, month, day)), absence_days)
 
 # work
-work_days = []
+work_days = [day for day in business_days if day not in absence_days]
 map(lambda day: timesheet.log_task(TASKS['daily'], datetime(year, month, day)), work_days)
 
 # timesheet.log_time('JIRA-2', datetime(year, month, 1), 2.0, 'Fixed some bug.')
