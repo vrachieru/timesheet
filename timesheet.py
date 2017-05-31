@@ -70,23 +70,35 @@ class Timesheet:
     def log_task(self, task, date):
         return self.log_time(task['issue'], date, task['duration'], task['comment'])
 
+def business_days_in_month(year, month):
+    return {day for week in monthcalendar(year, month) for day in week[:5] if day != 0}
 
+def work_days_in_range(work_days, start, end):
+    return {day for day in range(start, end+1) if day in work_days}
+
+def work_days_in_ranges(work_days, ranges):
+    return reduce(set.union, [work_days_in_range(work_days, start, end) for start, end in ranges], set())
 
 timesheet = Timesheet('Name.Surname', 'password')
 
 year=datetime.now().year
 month=datetime.now().month
 
-business_days = [day for week in monthcalendar(year, month) for day in week[:5] if day != 0]
-
-# absence
-absence_days = []
+# Absence
+absence_days = set() # ex: {1, 4}
 map(lambda day: timesheet.log_task(TASKS['absence'], datetime(year, month, day)), absence_days)
 
-# work
-work_days = [day for day in business_days if day not in absence_days]
-map(lambda day: timesheet.log_task(TASKS['daily'], datetime(year, month, day)), work_days)
+# Work
+work_days = business_days_in_month(year, month) - absence_days
 
+#-# Daily
+# map(lambda day: timesheet.log_task(TASKS['daily'], datetime(year, month, day)), work_days)
+
+#-# Range
+# task_1 = work_days_in_ranges(work_days, [(2,11), (22,31)])
+# map(lambda day: timesheet.log_time('JIRA-1', datetime(year, month, day), 7.5, 'Implementation and testing'), task_1)
+
+#-# Individual
 # timesheet.log_time('JIRA-2', datetime(year, month, 1), 2.0, 'Fixed some bug.')
 # timesheet.log_time('JIRA-3', datetime(year, month, 1), 1.0, 'Helped colleague with issue.')
 # timesheet.log_time('JIRA-4', datetime(year, month, 1), 4.5, 'Implemented new feature.')
